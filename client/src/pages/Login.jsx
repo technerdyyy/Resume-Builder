@@ -18,7 +18,7 @@ export default function Login() {
   if (isAuthenticated) return null;
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <AuthForm mode="login" />
     </div>
   );

@@ -13,6 +13,8 @@ import {
   X,
   ChevronDown,
 } from "lucide-react";
+import Navbar from "../components/Navbar";
+// import { useSearchParams } from "react-router-dom";
 
 const ResumeForm = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -93,6 +95,17 @@ const ResumeForm = ({ onSubmit }) => {
     "Pandas",
     "NumPy",
   ];
+
+  //   const [searchParams] = useSearchParams();
+  // const editId = searchParams.get('edit');
+
+  // for fetching pre-filled data to edit
+  // useEffect(() => {
+  // if (editId) {
+  //   // Fetch and pre-fill resume data
+  //   fetchResumeData(editId);
+  // }
+  // }, [editId]);
 
   // Add this useEffect after your state declarations:
   useEffect(() => {
@@ -250,8 +263,9 @@ const ResumeForm = ({ onSubmit }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-6">
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="max-w-4xl mx-auto px-6 py-6">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">

@@ -15,6 +15,7 @@ import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import toast, { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import Profile from "./pages/Profile.jsx";
 
 // Create context for sharing resume data across components
 export const ResumeContext = createContext();
@@ -187,6 +188,7 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/" element={<LandingPageWrapper />} />
+                <Route path="/profile" element={<Profile />} />
                 <Route path="/resume-add" element={<ResumeFormWrapper />} />
                 <Route path="/preview" element={<ResumePreviewWrapper />} />
               </Routes>
