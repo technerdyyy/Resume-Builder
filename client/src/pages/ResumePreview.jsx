@@ -40,13 +40,13 @@ const ResumePreview = ({ resumeData, onEdit }) => {
           </header>
 
           {/* Professional Summary */}
-          {resumeData.aiSummary && (
+          {(resumeData.professionalSummary || resumeData.aiSummary) && (
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">
                 Professional Summary
               </h2>
               <p className="text-gray-700 leading-relaxed">
-                {resumeData.aiSummary}
+                {resumeData.professionalSummary || resumeData.aiSummary}
               </p>
             </section>
           )}
@@ -101,7 +101,8 @@ const ResumePreview = ({ resumeData, onEdit }) => {
                   </p>
                 </div>
                 <p className="text-gray-700 leading-relaxed">
-                  {resumeData.jobDescription}
+                  {resumeData.enhancedJobDescription ||
+                    resumeData.jobDescription}
                 </p>
               </div>
             </div>
@@ -113,23 +114,50 @@ const ResumePreview = ({ resumeData, onEdit }) => {
               Projects
             </h2>
             <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                  {resumeData.projectName}
-                </h3>
-                <p className="text-gray-700 leading-relaxed mb-3">
-                  {resumeData.aiProjectDescription ||
-                    resumeData.projectDescription}
-                </p>
+              {/* Handle multiple projects */}
+              {resumeData.projects ? (
+                // New format with multiple projects
+                resumeData.projects.map((project, index) => (
+                  <div key={index}>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                      {project.projectName}
+                    </h3>
+                    <p className="text-gray-700 leading-relaxed mb-3">
+                      {resumeData.enhancedProjects &&
+                      resumeData.enhancedProjects[index]
+                        ? resumeData.enhancedProjects[index].enhancedDescription
+                        : project.projectDescription}
+                    </p>
+                    <div>
+                      <span className="text-sm font-medium text-gray-600">
+                        Technologies:{" "}
+                      </span>
+                      <span className="text-blue-600">
+                        {project.technologies}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                // Old format - single project (backward compatibility)
                 <div>
-                  <span className="text-sm font-medium text-gray-600">
-                    Technologies:{" "}
-                  </span>
-                  <span className="text-blue-600">
-                    {resumeData.technologies}
-                  </span>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                    {resumeData.projectName}
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed mb-3">
+                    {resumeData.aiProjectDescription ||
+                      resumeData.projectDescription}
+                  </p>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">
+                      Technologies:{" "}
+                    </span>
+                    <span className="text-blue-600">
+                      {resumeData.technologies}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </section>
 
@@ -144,14 +172,26 @@ const ResumePreview = ({ resumeData, onEdit }) => {
                   Technical Skills
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {resumeData.technicalSkills.split(",").map((skill, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
-                    >
-                      {skill.trim()}
-                    </span>
-                  ))}
+                  {/* Handle both array and string formats */}
+                  {Array.isArray(resumeData.technicalSkills)
+                    ? resumeData.technicalSkills.map((skill, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                        >
+                          {skill.trim()}
+                        </span>
+                      ))
+                    : resumeData.technicalSkills
+                        .split(",")
+                        .map((skill, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                          >
+                            {skill.trim()}
+                          </span>
+                        ))}
                 </div>
               </div>
               <div>
@@ -159,18 +199,60 @@ const ResumePreview = ({ resumeData, onEdit }) => {
                   Soft Skills
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {resumeData.softSkills.split(",").map((skill, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium"
-                    >
-                      {skill.trim()}
-                    </span>
-                  ))}
+                  {/* Handle both array and string formats */}
+                  {Array.isArray(resumeData.formattedSoftSkills)
+                    ? resumeData.formattedSoftSkills.map((skill, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium"
+                        >
+                          {skill.trim()}
+                        </span>
+                      ))
+                    : resumeData.softSkills.split(",").map((skill, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium"
+                        >
+                          {skill.trim()}
+                        </span>
+                      ))}
                 </div>
               </div>
             </div>
           </section>
+
+          {/* Achievements Section (for non-AI generated resumes) */}
+          {resumeData.achievements && (
+            <section className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+                Key Achievements
+              </h2>
+              <ul className="space-y-2">
+                {resumeData.achievements.map((achievement, index) => (
+                  <li key={index} className="text-gray-700 flex items-start">
+                    <span className="text-blue-600 mr-2 mt-1">•</span>
+                    {achievement}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* AI Generation Badge */}
+          <div className="text-center mb-4">
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                resumeData.isAIGenerated
+                  ? "bg-green-100 text-green-800"
+                  : "bg-gray-100 text-gray-800"
+              }`}
+            >
+              {resumeData.isAIGenerated
+                ? "🤖 AI Enhanced"
+                : "📝 Standard Format"}
+            </span>
+          </div>
         </div>
 
         {/* Bottom Actions */}

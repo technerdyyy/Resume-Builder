@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-// import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 export default function AuthForm({ mode = "login" }) {
   const [isLogin, setIsLogin] = useState(mode === "login");
@@ -13,7 +13,7 @@ export default function AuthForm({ mode = "login" }) {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  //   const { login, signup, error } = useAuth();
+  const { login, signup, error } = useAuth();
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -22,32 +22,32 @@ export default function AuthForm({ mode = "login" }) {
     }));
   };
 
-  //   useEffect(() => {
-  //     if (error) setMessage(error);
-  //   }, [error]);
+  useEffect(() => {
+    if (error) setMessage(error);
+  }, [error]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
     setIsLoading(true);
 
-    // try {
-    //   if (isLogin) {
-    //     await login(formData.email, formData.password);
-    //     setMessage("Login successful ✅");
-    //   } else {
-    //     await signup(formData);
-    //     await login(formData.email, formData.password);
-    //     setMessage("Signup successful ✅ Redirecting...");
-    //   }
+    try {
+      if (isLogin) {
+        await login(formData.email, formData.password);
+        setMessage("Login successful ✅");
+      } else {
+        await signup(formData);
+        await login(formData.email, formData.password);
+        setMessage("Signup successful ✅ Redirecting...");
+      }
 
-    //   setTimeout(() => navigate("/editor"), 800);
-    // } catch (err) {
-    //   console.error(err);
-    //   setMessage(err.message || "Something went wrong.");
-    // } finally {
-    //   setIsLoading(false);
-    // }
+      setTimeout(() => navigate("/"), 800);
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message || "Something went wrong.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {

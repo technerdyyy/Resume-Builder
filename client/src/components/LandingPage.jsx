@@ -1,9 +1,11 @@
 import React from "react";
 import { Sparkles, FileText, Zap, ArrowRight, Users, Star } from "lucide-react";
+import Navbar from "./Navbar";
 
 const LandingPage = ({ onCreateResume }) => {
   return (
     <div className="min-h-screen bg-white">
+      <Navbar />
       {/* Hero Section */}
       <section className="relative pt-20 pb-32 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   User,
   Mail,
@@ -8,6 +8,10 @@ import {
   Briefcase,
   Code,
   Award,
+  Plus,
+  Trash2,
+  X,
+  ChevronDown,
 } from "lucide-react";
 
 const ResumeForm = ({ onSubmit }) => {
@@ -30,17 +34,76 @@ const ResumeForm = ({ onSubmit }) => {
     workDuration: "",
     jobDescription: "",
 
-    // Projects
-    projectName: "",
-    projectDescription: "",
-    technologies: "",
+    // Projects (now array)
+    projects: [
+      {
+        projectName: "",
+        projectDescription: "",
+        technologies: "",
+      },
+    ],
 
-    // Skills
-    technicalSkills: "",
+    // Skills (now arrays)
+    technicalSkills: [],
     softSkills: "",
   });
 
   const [errors, setErrors] = useState({});
+  const [useAI, setUseAI] = useState(true);
+  const [skillsDropdownOpen, setSkillsDropdownOpen] = useState(false);
+  const [skillsSearch, setSkillsSearch] = useState("");
+
+  // Predefined skills list
+  const availableSkills = [
+    "JavaScript",
+    "Python",
+    "Java",
+    "C++",
+    "C#",
+    "React",
+    "Angular",
+    "Vue.js",
+    "Node.js",
+    "Express.js",
+    "Django",
+    "Flask",
+    "Spring Boot",
+    "MongoDB",
+    "MySQL",
+    "PostgreSQL",
+    "Redis",
+    "AWS",
+    "Azure",
+    "Google Cloud",
+    "Docker",
+    "Kubernetes",
+    "Git",
+    "HTML",
+    "CSS",
+    "Sass",
+    "Tailwind CSS",
+    "Bootstrap",
+    "TypeScript",
+    "GraphQL",
+    "REST API",
+    "Machine Learning",
+    "TensorFlow",
+    "PyTorch",
+    "Data Analysis",
+    "Pandas",
+    "NumPy",
+  ];
+
+  // Add this useEffect after your state declarations:
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest(".skills-dropdown")) {
+        setSkillsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -58,6 +121,74 @@ const ResumeForm = ({ onSubmit }) => {
     }
   };
 
+  // Handle project changes
+  const handleProjectChange = (index, field, value) => {
+    const updatedProjects = formData.projects.map((project, i) =>
+      i === index ? { ...project, [field]: value } : project
+    );
+    setFormData((prev) => ({
+      ...prev,
+      projects: updatedProjects,
+    }));
+
+    // Clear errors
+    const errorKey = `projects.${index}.${field}`;
+    if (errors[errorKey]) {
+      setErrors((prev) => ({
+        ...prev,
+        [errorKey]: "",
+      }));
+    }
+  };
+
+  // Add new project
+  const addProject = () => {
+    setFormData((prev) => ({
+      ...prev,
+      projects: [
+        ...prev.projects,
+        {
+          projectName: "",
+          projectDescription: "",
+          technologies: "",
+        },
+      ],
+    }));
+  };
+
+  // Remove project
+  const removeProject = (index) => {
+    if (formData.projects.length > 1) {
+      const updatedProjects = formData.projects.filter((_, i) => i !== index);
+      setFormData((prev) => ({
+        ...prev,
+        projects: updatedProjects,
+      }));
+    }
+  };
+
+  // Handle skill selection
+  const addSkill = (skill) => {
+    if (!formData.technicalSkills.includes(skill)) {
+      setFormData((prev) => ({
+        ...prev,
+        technicalSkills: [...prev.technicalSkills, skill],
+      }));
+    }
+    setSkillsDropdownOpen(false);
+    setSkillsSearch(""); // Add this line
+  };
+
+  // Remove skill
+  const removeSkill = (skillToRemove) => {
+    setFormData((prev) => ({
+      ...prev,
+      technicalSkills: prev.technicalSkills.filter(
+        (skill) => skill !== skillToRemove
+      ),
+    }));
+  };
+
   const validateForm = () => {
     const newErrors = {};
     const requiredFields = [
@@ -72,10 +203,6 @@ const ResumeForm = ({ onSubmit }) => {
       "company",
       "workDuration",
       "jobDescription",
-      "projectName",
-      "projectDescription",
-      "technologies",
-      "technicalSkills",
       "softSkills",
     ];
 
@@ -84,6 +211,26 @@ const ResumeForm = ({ onSubmit }) => {
         newErrors[field] = "This field is required";
       }
     });
+
+    // Validate projects
+    formData.projects.forEach((project, index) => {
+      if (!project.projectName.trim()) {
+        newErrors[`projects.${index}.projectName`] = "Project name is required";
+      }
+      if (!project.projectDescription.trim()) {
+        newErrors[`projects.${index}.projectDescription`] =
+          "Project description is required";
+      }
+      if (!project.technologies.trim()) {
+        newErrors[`projects.${index}.technologies`] =
+          "Technologies are required";
+      }
+    });
+
+    // Validate technical skills
+    if (formData.technicalSkills.length === 0) {
+      newErrors.technicalSkills = "At least one technical skill is required";
+    }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -98,7 +245,7 @@ const ResumeForm = ({ onSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      onSubmit(formData);
+      onSubmit(formData, useAI);
     }
   };
 
@@ -410,83 +557,137 @@ const ResumeForm = ({ onSubmit }) => {
 
             {/* Projects */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">
-                Projects
-              </h2>
-              <div className="space-y-6">
-                {/* Project Name */}
-                <div className="space-y-2">
-                  <label className="flex items-center text-sm font-medium text-gray-700">
-                    <Code className="w-4 h-4 mr-2" />
-                    Project Name <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="projectName"
-                    value={formData.projectName}
-                    onChange={handleChange}
-                    placeholder="E-commerce Platform"
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                      errors.projectName ? "border-red-500" : "border-gray-300"
-                    }`}
-                  />
-                  {errors.projectName && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.projectName}
-                    </p>
-                  )}
-                </div>
-
-                {/* Project Description */}
-                <div className="space-y-2">
-                  <label className="flex items-center text-sm font-medium text-gray-700">
-                    <Code className="w-4 h-4 mr-2" />
-                    Project Description{" "}
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <textarea
-                    name="projectDescription"
-                    value={formData.projectDescription}
-                    onChange={handleChange}
-                    placeholder="Brief description of your project..."
-                    rows={4}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-vertical ${
-                      errors.projectDescription
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
-                  />
-                  {errors.projectDescription && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.projectDescription}
-                    </p>
-                  )}
-                </div>
-
-                {/* Technologies */}
-                <div className="space-y-2">
-                  <label className="flex items-center text-sm font-medium text-gray-700">
-                    <Code className="w-4 h-4 mr-2" />
-                    Technologies Used{" "}
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="technologies"
-                    value={formData.technologies}
-                    onChange={handleChange}
-                    placeholder="React, Node.js, MongoDB, AWS"
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                      errors.technologies ? "border-red-500" : "border-gray-300"
-                    }`}
-                  />
-                  {errors.technologies && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.technologies}
-                    </p>
-                  )}
-                </div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-800 pb-2 border-b border-gray-200">
+                  Projects
+                </h2>
+                <button
+                  type="button"
+                  onClick={addProject}
+                  className="flex items-center px-4 py-2  text-black rounded-lg  transition-colors cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  {/* Add Project */}
+                </button>
               </div>
+
+              {formData.projects.map((project, index) => (
+                <div
+                  key={index}
+                  className="mb-8 p-6 border rounded-lg bg-gray-50"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-medium text-gray-700">
+                      Project {index + 1}
+                    </h3>
+                    {formData.projects.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeProject(index)}
+                        className="flex items-center px-3 py-1  text-black rounded  transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4 mr-1 " />
+                        {/* Remove */}
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Project Name */}
+                    <div className="space-y-2">
+                      <label className="flex items-center text-sm font-medium text-gray-700">
+                        <Code className="w-4 h-4 mr-2" />
+                        Project Name{" "}
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={project.projectName}
+                        onChange={(e) =>
+                          handleProjectChange(
+                            index,
+                            "projectName",
+                            e.target.value
+                          )
+                        }
+                        placeholder="E-commerce Platform"
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                          errors[`projects.${index}.projectName`]
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                      />
+                      {errors[`projects.${index}.projectName`] && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors[`projects.${index}.projectName`]}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Project Description */}
+                    <div className="space-y-2">
+                      <label className="flex items-center text-sm font-medium text-gray-700">
+                        <Code className="w-4 h-4 mr-2" />
+                        Project Description{" "}
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <textarea
+                        value={project.projectDescription}
+                        onChange={(e) =>
+                          handleProjectChange(
+                            index,
+                            "projectDescription",
+                            e.target.value
+                          )
+                        }
+                        placeholder="Brief description of your project..."
+                        rows={4}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-vertical ${
+                          errors[`projects.${index}.projectDescription`]
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                      />
+                      {errors[`projects.${index}.projectDescription`] && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors[`projects.${index}.projectDescription`]}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Technologies */}
+                    <div className="space-y-2">
+                      <label className="flex items-center text-sm font-medium text-gray-700">
+                        <Code className="w-4 h-4 mr-2" />
+                        Technologies Used{" "}
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={project.technologies}
+                        onChange={(e) =>
+                          handleProjectChange(
+                            index,
+                            "technologies",
+                            e.target.value
+                          )
+                        }
+                        placeholder="React, Node.js, MongoDB, AWS"
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                          errors[`projects.${index}.technologies`]
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                      />
+                      {errors[`projects.${index}.technologies`] && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors[`projects.${index}.technologies`]}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </section>
 
             {/* Skills */}
@@ -502,18 +703,61 @@ const ResumeForm = ({ onSubmit }) => {
                     Technical Skills{" "}
                     <span className="text-red-500 ml-1">*</span>
                   </label>
-                  <textarea
-                    name="technicalSkills"
-                    value={formData.technicalSkills}
-                    onChange={handleChange}
-                    placeholder="JavaScript, Python, React, Node.js, AWS, Docker..."
-                    rows={3}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-vertical ${
-                      errors.technicalSkills
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    }`}
-                  />
+
+                  {/* Skills Dropdown */}
+                  <div className="relative skills-dropdown">
+                    <input
+                      type="text"
+                      value={skillsSearch}
+                      onChange={(e) => setSkillsSearch(e.target.value)}
+                      onFocus={() => setSkillsDropdownOpen(true)}
+                      placeholder="Search and select skills..."
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    />
+
+                    {skillsDropdownOpen && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {availableSkills
+                          .filter(
+                            (skill) =>
+                              !formData.technicalSkills.includes(skill) &&
+                              skill
+                                .toLowerCase()
+                                .includes(skillsSearch.toLowerCase())
+                          )
+                          .map((skill) => (
+                            <button
+                              key={skill}
+                              type="button"
+                              onClick={() => addSkill(skill)}
+                              className="w-full px-4 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                            >
+                              {skill}
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Selected Skills Tags */}
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {formData.technicalSkills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                      >
+                        {skill}
+                        <button
+                          type="button"
+                          onClick={() => removeSkill(skill)}
+                          className="ml-2 hover:text-blue-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+
                   {errors.technicalSkills && (
                     <p className="text-red-500 text-sm mt-1">
                       {errors.technicalSkills}
@@ -546,13 +790,32 @@ const ResumeForm = ({ onSubmit }) => {
               </div>
             </section>
 
+            {/* AI Toggle */}
+            <section>
+              <div className="flex items-center justify-center space-x-3 p-4 bg-gray-50 rounded-lg">
+                <input
+                  type="checkbox"
+                  id="useAI"
+                  checked={useAI}
+                  onChange={(e) => setUseAI(e.target.checked)}
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                />
+                <label
+                  htmlFor="useAI"
+                  className="text-sm font-medium text-gray-700 cursor-pointer"
+                >
+                  Generate with AI
+                </label>
+              </div>
+            </section>
+
             {/* Submit Button */}
             <div className="text-center pt-8">
               <button
                 type="submit"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-12 py-4 rounded-full text-lg font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-500 focus:ring-opacity-50"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-12 py-4 rounded-full text-lg font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-500 focus:ring-opacity-50 cursor-pointer"
               >
-                Generate Resume with AI
+                {useAI ? "Generate Resume with AI" : "Generate Resume"}
               </button>
             </div>
           </form>
