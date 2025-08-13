@@ -7,9 +7,15 @@ import toast from "react-hot-toast";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [savedResumes, setSavedResumes] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  //logout
+  const handleLogout = () => {
+    logout();
+    navigate("/"); // Redirect to home page after logout
+  };
 
   // Mock data - replace with actual API calls
   useEffect(() => {
@@ -89,19 +95,29 @@ const Profile = () => {
       <div className="container mx-auto px-6 py-8">
         {/* Profile Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="flex items-center space-x-4">
-            <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 rounded-full">
-              <User size={32} />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                {user?.username || "John Doe"}
-              </h1>
-              <div className="flex items-center text-gray-600 mt-1">
-                <Mail size={16} className="mr-2" />
-                <span>{user?.email || "john.doe@example.com"}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 rounded-full">
+                <User size={32} />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800">
+                  {user?.username || "John Doe"}
+                </h1>
+                <div className="flex items-center text-gray-600 mt-1">
+                  <Mail size={16} className="mr-2" />
+                  <span>{user?.email || "john.doe@example.com"}</span>
+                </div>
               </div>
             </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
+            >
+              Logout
+            </button>
           </div>
         </div>
 
