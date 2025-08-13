@@ -27,28 +27,33 @@ export default function AuthForm({ mode = "login" }) {
   }, [error]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage("");
-    setIsLoading(true);
+  e.preventDefault();
+  setMessage("");
+  setIsLoading(true);
 
-    try {
-      if (isLogin) {
-        await login(formData.email, formData.password);
-        setMessage("Login successful ✅");
-      } else {
-        await signup(formData);
-        await login(formData.email, formData.password);
-        setMessage("Signup successful ✅ Redirecting...");
-      }
-
-      setTimeout(() => navigate("/"), 800);
-    } catch (err) {
-      console.error(err);
-      setMessage(err.message || "Something went wrong.");
-    } finally {
-      setIsLoading(false);
+  try {
+    if (isLogin) {
+      await login(formData.email, formData.password);
+      setMessage("Login successful ✅");
+    } else {
+      // Send 'name' instead of 'username' to match database schema
+      await signup({
+        name: formData.username,  // Map username to name
+        email: formData.email,
+        password: formData.password
+      });
+      await login(formData.email, formData.password);
+      setMessage("Signup successful ✅ Redirecting...");
     }
-  };
+
+    setTimeout(() => navigate("/"), 800);
+  } catch (err) {
+    console.error(err);
+    setMessage(err.message || "Something went wrong.");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleGoogleLogin = () => {
     window.location.href = "http://localhost:5000/api/auth/google/callback";

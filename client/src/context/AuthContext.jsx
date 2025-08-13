@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 🔄 On mount: Check session
+  // 🔄 On mount: Check session (Fixed infinite loop)
   useEffect(() => {
     const verifyUser = async () => {
       setLoading(true);
@@ -29,12 +29,10 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
       } catch (err) {
         if (err.status === 401) {
-          // ✅ Silently ignore
-          console.info("User not authenticated");
+          // ✅ Silently ignore - normal when not logged in
         } else {
           console.warn("Unexpected error during session verification:", err);
         }
-
         setUser(null);
         setIsAuthenticated(false);
       } finally {
@@ -43,7 +41,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     verifyUser();
-  }, [isAuthenticated]);
+  }, []); // ✅ Fixed: Empty dependency array
 
   // 🔐 Login
   const login = async (email, password) => {
@@ -75,8 +73,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 🧾 Signup
-  const signup = async ({ username, email, password }) => {
+  // 🧾 Signup (Fixed parameter name)
+  const signup = async ({ name, email, password }) => { // ✅ Changed from username to name
     setLoading(true);
     setError(null);
 
@@ -87,7 +85,7 @@ export const AuthProvider = ({ children }) => {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, email, password }),
+          body: JSON.stringify({ name, email, password }), // ✅ Now correctly sending name
         }
       );
 

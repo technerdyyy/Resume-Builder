@@ -42,10 +42,20 @@ const login = async (req, res) => {
             { expiresIn: process.env.JWT_EXPIRES_IN }
         );
 
-        res.json({ token });
+        // Send token in HTTP-only cookie
+        res.cookie("token", token, {
+            httpOnly: true, // prevents JS access
+            secure: process.env.NODE_ENV === "production", // only https in prod
+            sameSite: "strict", // CSRF protection
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
+        });
+
+        res.json({ message: "Logged in successfully" });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
+
 
 module.exports = { signup, login };
