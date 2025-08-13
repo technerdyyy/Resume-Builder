@@ -48,14 +48,14 @@ const Navbar = () => {
             </button>
 
             {/* ✅ Show profile icon if logged in, else Sign Up */}
-            {/* {user ? ( */}
-            <Link to="/profile">
-              <User
-                size={24}
-                className=" rounded-full border-2 border-white hover:scale-105 transition-transform"
-              />
-            </Link>
-            {/* ) : (
+            {user ? (
+              <Link to="/profile">
+                <User
+                  size={24}
+                  className=" rounded-full border-2 border-white hover:scale-105 transition-transform"
+                />
+              </Link>
+            ) : (
               <Link
                 to="/login"
                 className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
@@ -66,7 +66,7 @@ const Navbar = () => {
               >
                 Login
               </Link>
-            )} */}
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -138,13 +138,29 @@ const Navbar = () => {
                 >
                   Contact
                 </Link>
-                <Link
-                  to="/profile"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-6 py-3 rounded-lg font-medium text-white hover:bg-white hover:bg-opacity-10 transition-all duration-300"
-                >
-                  Profile
-                </Link>
+
+                {/* ✅ Show profile link if logged in, else Login */}
+                {user ? (
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-6 py-3 rounded-lg font-medium text-white hover:bg-white hover:bg-opacity-10 transition-all duration-300"
+                  >
+                    Profile
+                  </Link>
+                ) : (
+                  <Link
+                    to="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+                      location.pathname === "/login"
+                        ? "bg-white bg-opacity-20 text-purple-600 shadow-lg"
+                        : "text-white hover:bg-white hover:bg-opacity-10"
+                    }`}
+                  >
+                    Login
+                  </Link>
+                )}
               </div>
             </div>
           )}
