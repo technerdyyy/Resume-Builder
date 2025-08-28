@@ -1,0 +1,39 @@
+const resumeModel = require('../Models/resumeModel');
+
+exports.createResume = async (req, res) => {
+  try {
+    const userId = req.user.id; // from auth middleware
+    const resume = await resumeModel.createResume({ userId, ...req.body });
+    res.status(201).json(resume);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getUserResumes = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const resumes = await resumeModel.getResumesByUserId(userId);
+    res.json(resumes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getResume = async (req, res) => {
+  try {
+    const resume = await resumeModel.getResumeById(req.params.id);
+    res.json(resume);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateResume = async (req, res) => {
+  try {
+    const resume = await resumeModel.updateResume(req.params.id, req.body);
+    res.json(resume);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

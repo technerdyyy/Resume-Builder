@@ -14,7 +14,7 @@ import { generateResumeContent } from "./utils/geminiApi";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import toast, { Toaster } from "react-hot-toast";
-import { AuthProvider } from "./context/AuthContext.jsx";
+import { useAuth , AuthProvider } from "./context/AuthContext.jsx";
 import Profile from "./pages/Profile.jsx";
 
 // Create context for sharing resume data across components
@@ -165,6 +165,28 @@ const ResumePreviewWrapper = () => {
   return <ResumePreview resumeData={resumeData} onEdit={handleEditResume} />;
 };
 
+//loading spinner component
+const AppContent = () => {
+  const {loading, isAuthenticated} = useAuth();
+
+  //showing loading spinner while checking auth status
+  if (loading) {
+    return <LoadingSpinner message="Loading..." />;
+  }
+
+  return (
+    <Routes>
+      {/* Routes without Navbar */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/" element={<LandingPageWrapper />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/resume-add" element={<ResumeFormWrapper />} />
+      <Route path="/preview" element={<ResumePreviewWrapper />} />
+    </Routes>
+  );
+}
+
 const App = () => {
   const [resumeData, setResumeData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -183,15 +205,7 @@ const App = () => {
         >
           <Router>
             <div className="min-h-screen bg-gray-50">
-              <Routes>
-                {/* Routes without Navbar */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/" element={<LandingPageWrapper />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/resume-add" element={<ResumeFormWrapper />} />
-                <Route path="/preview" element={<ResumePreviewWrapper />} />
-              </Routes>
+              <AppContent />  {/* Replace Routes with AppContent */}
 
               {isLoading && (
                 <LoadingSpinner message="Generating your resume..." />
@@ -203,5 +217,4 @@ const App = () => {
     </div>
   );
 };
-
 export default App;

@@ -37,20 +37,29 @@ const login = async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: user.id, email: user.email },
+            { id: user.id, email: user.email, name: user.name },
             process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN }
+            { expiresIn: process.env.JWT_EXPIRES_IN || '24h' } // Use JWT_EXPIRES_IN from .env or default to 24h    
         );
 
         // Send token in HTTP-only cookie
         res.cookie("token", token, {
-            httpOnly: true, // prevents JS access
-            secure: process.env.NODE_ENV === "production", // only https in prod
-            sameSite: "strict", // CSRF protection
-            maxAge: 24 * 60 * 60 * 1000 // 1 day
+            httpOnly: true,
+            secure: false, // set to true in production
+            sameSite: 'lax',
+            maxAge: 24 * 60 * 60 * 1000, // 24 hours
+            path: '/'
         });
 
-        res.json({ message: "Logged in successfully" });
+        res.json({ 
+            message: "Login successful",
+                user: {
+                id: user.id,
+                name: user.name,
+                email: user.email
+                // other user fields you need
+            }
+});
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

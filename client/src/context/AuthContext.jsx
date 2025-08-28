@@ -14,34 +14,33 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Start with loading true
   const [error, setError] = useState(null);
 
-  // 🔄 On mount: Check session (Fixed infinite loop)
+  // 🔄 On mount: Check if user has valid session
   useEffect(() => {
     const verifyUser = async () => {
-      setLoading(true);
-      setError(null);
-
       try {
         const data = await fetchUserProfile();
+        console.log("Session verification successful:", data.user);
         setUser(data.user);
         setIsAuthenticated(true);
       } catch (err) {
         if (err.status === 401) {
-          // ✅ Silently ignore - normal when not logged in
+          // Normal - user not authenticated
+          console.log("No valid session found");
         } else {
           console.warn("Unexpected error during session verification:", err);
         }
         setUser(null);
         setIsAuthenticated(false);
       } finally {
-        setLoading(false);
+        setLoading(false); // Always set loading to false when done
       }
     };
 
     verifyUser();
-  }, []); // ✅ Fixed: Empty dependency array
+  }, []); // Run only once on mount
 
   // 🔐 Login
   const login = async (email, password) => {
@@ -61,20 +60,32 @@ export const AuthProvider = ({ children }) => {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Login failed");
+      
+      console.log("Login response:", data);
 
-      setUser(data.user);
+      // If user data is not in login response, fetch it from protected endpoint
+      if (data.user) {
+        setUser(data.user);
+      } else {
+        // Fetch user profile after successful login
+        const profileData = await fetchUserProfile();
+        setUser(profileData.user);
+      }
+      
       setIsAuthenticated(true);
-      return data.user;
+      return data;
     } catch (err) {
       setError(err.message);
+      setUser(null);
+      setIsAuthenticated(false);
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  // 🧾 Signup (Fixed parameter name)
-  const signup = async ({ name, email, password }) => { // ✅ Changed from username to name
+  // 🧾 Signup
+  const signup = async ({ name, email, password }) => {
     setLoading(true);
     setError(null);
 
@@ -85,7 +96,7 @@ export const AuthProvider = ({ children }) => {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, password }), // ✅ Now correctly sending name
+          body: JSON.stringify({ name, email, password }),
         }
       );
 
@@ -103,14 +114,17 @@ export const AuthProvider = ({ children }) => {
 
   // 🚪 Logout
   const logout = async () => {
+    setLoading(true);
     try {
-      await backendLogout(); // POST /auth/logout
+      await backendLogout();
+      console.log("Logout successful");
     } catch (err) {
       console.error("Logout failed:", err);
     } finally {
       setUser(null);
       setIsAuthenticated(false);
       setError(null);
+      setLoading(false);
     }
   };
 

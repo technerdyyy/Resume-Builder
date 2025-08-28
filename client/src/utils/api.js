@@ -1,29 +1,19 @@
 // const API_BASE_URL = "http://localhost:5000/api";
 
 /**
- * Get the current user from localStorage
- * @returns {Object|null} The user object or null if not found
- */
-export const getUser = () => {
-  const userJson = localStorage.getItem("user");
-  return userJson ? JSON.parse(userJson) : null;
-};
-
-/**
- * Logout the user by calling the backend and clearing local user data
+ * Logout the user by calling the backend
  */
 export const logout = async () => {
   try {
-    await fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/logout`, {
+    await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
+    window.location.href = "/login";
   } catch (err) {
     console.error("Logout error:", err);
+    throw err;
   }
-
-  localStorage.removeItem("user");
-  window.location.href = "/login";
 };
 
 /**
@@ -85,7 +75,6 @@ export const fetchUserProfile = async () => {
     error.status = res.status;
     throw error;
   }
-
   return res.json();
 };
 
