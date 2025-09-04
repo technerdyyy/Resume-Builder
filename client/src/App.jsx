@@ -142,7 +142,7 @@ const ResumeFormWrapper = () => {
   return <ResumeForm onSubmit={handleFormSubmit} />;
 };
 
-// Wrapper component for ResumePreview to handle editing
+// Wrapper component for ResumePreview to handle editing and saving
 const ResumePreviewWrapper = () => {
   const navigate = useNavigate();
   const { resumeData } = React.useContext(ResumeContext);
@@ -151,7 +151,19 @@ const ResumePreviewWrapper = () => {
     navigate("/resume-add");
   };
 
-  // Redirect to landing page if no resume data
+  // Save resume to backend
+  const handleSaveResume = async (data) => {
+    try {
+      const { createResume } = await import("./utils/api");
+      await createResume(data);
+      toast.success("Resume saved to your profile!");
+      // Optionally redirect to profile or update state
+      navigate("/profile");
+    } catch (err) {
+      toast.error("Failed to save resume");
+    }
+  };
+
   React.useEffect(() => {
     if (!resumeData) {
       navigate("/");
@@ -162,7 +174,13 @@ const ResumePreviewWrapper = () => {
     return null;
   }
 
-  return <ResumePreview resumeData={resumeData} onEdit={handleEditResume} />;
+  return (
+    <ResumePreview
+      resumeData={resumeData}
+      onSave={handleSaveResume}
+      onEdit={handleEditResume}
+    />
+  );
 };
 
 //loading spinner component

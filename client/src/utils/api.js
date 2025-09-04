@@ -3,6 +3,7 @@
 /**
  * Logout the user by calling the backend
  */
+
 export const logout = async () => {
   try {
     await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/logout`, {
@@ -81,3 +82,60 @@ export const fetchUserProfile = async () => {
 // export const fetchUserProfile = async () => {
 //   return await apiRequest('/auth/me', { method: 'GET' });
 // };
+
+
+// ...existing code...
+
+// Create a new resume
+export const createResume = async (resumeData) => {
+  const res = await fetch(
+    `${import.meta.env.VITE_BACKEND_URL}/api/resumes`,
+    {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(resumeData)
+    }
+  );
+  if (!res.ok) throw new Error("Failed to create resume");
+  return res.json();
+};
+
+// Get all resumes for the logged-in user
+export const getUserResumes = async () => {
+  const res = await fetch(
+    `${import.meta.env.VITE_BACKEND_URL}/api/resumes`,
+    {
+      credentials: "include"
+    }
+  );
+  if (!res.ok) throw new Error("Failed to fetch resumes");
+  return res.json();
+};
+
+// Get a specific resume by ID
+export const getResumeById = async (resumeId) => {
+  const res = await fetch(
+    `${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeId}`,
+    {
+      credentials: "include"
+    }
+  );
+  if (!res.ok) throw new Error("Failed to fetch resume");
+  return res.json();
+};
+
+// Update a resume
+export const updateResume = async (resumeId, resumeData) => {
+  const res = await fetch(
+    `${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeId}`,
+    {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(resumeData)
+    }
+  );
+  if (!res.ok) throw new Error("Failed to update resume");
+  return res.json();
+};

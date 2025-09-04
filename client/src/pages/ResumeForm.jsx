@@ -14,6 +14,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
+import { useSearchParams } from "react-router-dom";
+
 // import { useSearchParams } from "react-router-dom";
 
 const ResumeForm = ({ onSubmit }) => {
@@ -47,6 +49,8 @@ const ResumeForm = ({ onSubmit }) => {
 
     // Skills (now arrays)
     technicalSkills: [],
+  
+  
     softSkills: "",
   });
 
@@ -54,6 +58,7 @@ const ResumeForm = ({ onSubmit }) => {
   const [useAI, setUseAI] = useState(true);
   const [skillsDropdownOpen, setSkillsDropdownOpen] = useState(false);
   const [skillsSearch, setSkillsSearch] = useState("");
+  
 
   // Predefined skills list
   const availableSkills = [
@@ -108,6 +113,8 @@ const ResumeForm = ({ onSubmit }) => {
   // }, [editId]);
 
   // Add this useEffect after your state declarations:
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit');
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest(".skills-dropdown")) {

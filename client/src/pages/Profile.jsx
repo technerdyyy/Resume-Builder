@@ -17,61 +17,35 @@ const Profile = () => {
     navigate("/"); // Redirect to home page after logout
   };
 
-  // Mock data - replace with actual API calls
+  // Fetch resumes from backend
   useEffect(() => {
-    // Simulate API call to fetch user's saved resumes
     const fetchResumes = async () => {
       try {
-        // Replace this with your actual API call
-        const mockResumes = [
-          {
-            id: 1,
-            title: "Software Developer Resume",
-            lastModified: "2024-01-15",
-            createdAt: "2024-01-10",
-          },
-          {
-            id: 2,
-            title: "Frontend Developer Resume",
-            lastModified: "2024-01-20",
-            createdAt: "2024-01-18",
-          },
-          {
-            id: 3,
-            title: "Full Stack Developer Resume",
-            lastModified: "2024-01-25",
-            createdAt: "2024-01-22",
-          },
-        ];
-
-        setTimeout(() => {
-          setSavedResumes(mockResumes);
-          setLoading(false);
-        }, 1000);
+        // Import getUserResumes from your api.js
+        const { getUserResumes } = await import("../utils/api");
+        const resumes = await getUserResumes();
+        setSavedResumes(resumes);
       } catch (error) {
         console.error("Error fetching resumes:", error);
+      } finally {
         setLoading(false);
       }
     };
-
     fetchResumes();
   }, []);
 
+
   const handleEditResume = (resumeId) => {
-    // Navigate to resume-add page with the resume ID to pre-fill data
     navigate(`/resume-add?edit=${resumeId}`);
   };
 
+  // Delete resume using API
   const handleDeleteResume = async (resumeId) => {
     if (window.confirm("Are you sure you want to delete this resume?")) {
       try {
-        // Replace with actual API call to delete resume
-        // await deleteResume(resumeId);
-
-        // Update local state
-        setSavedResumes(
-          savedResumes.filter((resume) => resume.id !== resumeId)
-        );
+        const { deleteResume } = await import("../utils/api");
+        await deleteResume(resumeId);
+        setSavedResumes(savedResumes.filter((resume) => resume.id !== resumeId));
         toast.success("Resume deleted successfully!");
       } catch (error) {
         console.error("Error deleting resume:", error);
@@ -79,6 +53,23 @@ const Profile = () => {
       }
     }
   };
+
+  // Save resume using API (to be called from ResumePreview)
+  const saveResume = async (resumeData) => {
+    try {
+      const { createResume } = await import("../utils/api");
+      await createResume(resumeData);
+      toast.success("Resume saved to your profile!");
+      // Optionally refresh resumes
+      const { getUserResumes } = await import("../utils/api");
+      const resumes = await getUserResumes();
+      setSavedResumes(resumes);
+    } catch (error) {
+      toast.error("Failed to save resume.");
+    }
+  };
+
+  // ...existing code...
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {

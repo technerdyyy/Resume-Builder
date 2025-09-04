@@ -1,14 +1,16 @@
-import React from "react";
-import { Download, Edit, Mail, Phone, MapPin, Globe } from "lucide-react";
 
-const ResumePreview = ({ resumeData, onEdit }) => {
+import React from "react";
+import { Download, Mail, Phone, MapPin, Globe } from "lucide-react";
+
+const ResumePreview = ({ resumeData, onSave }) => {
   const handleDownload = () => {
-    // Create a printable version
     window.print();
   };
 
-  const handleEdit = () => {
-    onEdit();
+  const handleSave = () => {
+    if (typeof onSave === "function") {
+      onSave(resumeData);
+    }
   };
 
   return (
@@ -262,10 +264,10 @@ const ResumePreview = ({ resumeData, onEdit }) => {
           </p>
           <div className="flex justify-center space-x-4">
             <button
-              onClick={handleEdit}
-              className="px-6 py-3 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+              onClick={handleSave}
+              className="px-6 py-3 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors"
             >
-              Make Changes
+              Save Resume
             </button>
             <button
               onClick={handleDownload}
