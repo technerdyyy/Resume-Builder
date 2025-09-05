@@ -11,7 +11,8 @@ const app = express();
 app.use(cookieParser()); // Move cookieParser before routes
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:5173', // your frontend URL
+    // origin: 'http://localhost:5173', // your frontend URL
+    origin: process.env.VITE_FRONTEND_URL,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
