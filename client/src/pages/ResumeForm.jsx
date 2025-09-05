@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useSearchParams } from "react-router-dom";
+import toast from "react-hot-toast";
 
 // import { useSearchParams } from "react-router-dom";
 
@@ -101,20 +102,62 @@ const ResumeForm = ({ onSubmit }) => {
     "NumPy",
   ];
 
-  //   const [searchParams] = useSearchParams();
-  // const editId = searchParams.get('edit');
-
-  // for fetching pre-filled data to edit
-  // useEffect(() => {
-  // if (editId) {
-  //   // Fetch and pre-fill resume data
-  //   fetchResumeData(editId);
-  // }
-  // }, [editId]);
-
-  // Add this useEffect after your state declarations:
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
+
+  // Fetch resume data for editing
+  useEffect(() => {
+    const fetchResumeData = async (resumeId) => {
+      try {
+        const { getResumeById, getProjectsByResume } = await import("../utils/api");
+        
+        // Fetch resume data
+        const resume = await getResumeById(resumeId);
+        
+        // Fetch projects for this resume
+        const projectsResponse = await getProjectsByResume(resumeId);
+        const projects = projectsResponse.projects || [];
+        
+        // Pre-fill form data
+        setFormData({
+          name: resume.name || "",
+          email: resume.email || "",
+          phone: resume.phone || "",
+          location: resume.location || "",
+          degree: resume.degree || "",
+          university: resume.university || "",
+          graduationYear: resume.graduation_year || "",
+          gpa: resume.gpa || "",
+          jobTitle: resume.job_title || "",
+          company: resume.company || "",
+          workDuration: resume.work_duration || "",
+          jobDescription: resume.job_description || "",
+          projects: projects.length > 0 ? projects.map(p => ({
+            projectName: p.project_name || "",
+            projectDescription: p.project_description || "",
+            technologies: p.technologies || "",
+          })) : [{
+            projectName: "",
+            projectDescription: "",
+            technologies: "",
+          }],
+          technicalSkills: resume.technical_skills ? 
+            (Array.isArray(resume.technical_skills) ? resume.technical_skills : 
+             typeof resume.technical_skills === 'string' ? resume.technical_skills.split(',').map(s => s.trim()) : []) : [],
+          softSkills: resume.soft_skills || "",
+        });
+      } catch (error) {
+        console.error("Error fetching resume data:", error);
+        toast.error("Failed to load resume data for editing");
+      }
+    };
+
+    if (editId) {
+      fetchResumeData(editId);
+    }
+  }, [editId]);
+
+  // Handle click outside for skills dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest(".skills-dropdown")) {
@@ -265,7 +308,7 @@ const ResumeForm = ({ onSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      onSubmit(formData, useAI);
+      onSubmit(formData, useAI, editId);
     }
   };
 
@@ -276,10 +319,10 @@ const ResumeForm = ({ onSubmit }) => {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              Build Your Resume
+              {editId ? "Edit Your Resume" : "Build Your Resume"}
             </h1>
             <p className="text-gray-600">
-              Fill in your details and let AI enhance your profile
+              {editId ? "Update your details and enhance your profile" : "Fill in your details and let AI enhance your profile"}
             </p>
           </div>
 
@@ -836,7 +879,10 @@ const ResumeForm = ({ onSubmit }) => {
                 type="submit"
                 className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-12 py-4 rounded-full text-lg font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-500 focus:ring-opacity-50 cursor-pointer"
               >
-                {useAI ? "Generate Resume with AI" : "Generate Resume"}
+                {editId 
+                  ? (useAI ? "Update Resume with AI" : "Update Resume")
+                  : (useAI ? "Generate Resume with AI" : "Generate Resume")
+                }
               </button>
             </div>
           </form>

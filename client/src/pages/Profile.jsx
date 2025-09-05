@@ -161,8 +161,8 @@ const Profile = () => {
                   </div>
 
                   <div className="text-sm text-gray-600 mb-4">
-                    <p>Created: {formatDate(resume.createdAt)}</p>
-                    <p>Modified: {formatDate(resume.lastModified)}</p>
+                    <p>Created: {formatDate(resume.created_at)}</p>
+                    <p>Modified: {formatDate(resume.updated_at)}</p>
                   </div>
 
                   <div className="flex space-x-2">

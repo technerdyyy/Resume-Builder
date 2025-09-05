@@ -81,7 +81,7 @@ const ResumeFormWrapper = () => {
   const navigate = useNavigate();
   const { setResumeData, setIsLoading } = React.useContext(ResumeContext);
 
-  const handleFormSubmit = async (formData, useAI) => {
+  const handleFormSubmit = async (formData, useAI, editId = null) => {
     setIsLoading(true);
 
     try {
@@ -96,6 +96,7 @@ const ResumeFormWrapper = () => {
           ...formData,
           ...aiContent,
           isAIGenerated: true,
+          editId: editId, // Pass editId for update operations
         };
       } else {
         // Generate basic resume without AI
@@ -106,6 +107,7 @@ const ResumeFormWrapper = () => {
           ...formData,
           ...basicContent,
           isAIGenerated: false,
+          editId: editId, // Pass editId for update operations
         };
       }
 
@@ -154,17 +156,35 @@ const ResumePreviewWrapper = () => {
   // Save resume to backend
   const handleSaveResume = async (data) => {
     try {
-      const { createResume } = await import("./utils/api");
-      await createResume(data);
-      toast.success("Resume saved to your profile!");
-      // Optionally redirect to profile or update state
+      const { createResume, updateResume, addProjectsToResume, updateProjectsForResume } = await import("./utils/api");
+      
+      let savedResume;
+      
+      if (data.editId) {
+        // Update existing resume
+        savedResume = await updateResume(data.editId, data);
+        
+        // Update projects for this resume
+        if (data.projects && data.projects.length > 0) {
+          await updateProjectsForResume(data.projects, data.editId);
+        }
+        toast.success("Resume updated successfully!");
+      } else {
+        // Create new resume
+        savedResume = await createResume(data);
+        // Save projects with resumeId
+        if (data.projects && data.projects.length > 0) {
+          await addProjectsToResume(data.projects, savedResume.id);
+        }
+        toast.success("Resume and projects saved to your profile!");
+      }
+      
       navigate("/profile");
     } catch (err) {
-      toast.error("Failed to save resume");
+      console.error("Save error:", err);
+      toast.error("Failed to save resume or projects");
     }
-  };
-
-  React.useEffect(() => {
+  };  React.useEffect(() => {
     if (!resumeData) {
       navigate("/");
     }

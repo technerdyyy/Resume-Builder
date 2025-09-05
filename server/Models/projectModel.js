@@ -25,4 +25,13 @@ const getProjectsByResume = async (resumeId) => {
     return result.rows;
 };
 
-module.exports = { addProjects, getProjectsByResume };
+// Delete all projects for a resume (for updates)
+const deleteProjectsByResume = async (resumeId) => {
+    const result = await pool.query(
+        "DELETE FROM projects WHERE resume_id = $1",
+        [resumeId]
+    );
+    return result.rowCount;
+};
+
+module.exports = { addProjects, getProjectsByResume, deleteProjectsByResume };

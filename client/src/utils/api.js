@@ -101,6 +101,48 @@ export const createResume = async (resumeData) => {
   return res.json();
 };
 
+// Add projects to a resume
+export const addProjectsToResume = async (projects, resumeId) => {
+  const res = await fetch(
+    `${import.meta.env.VITE_BACKEND_URL}/api/projects/add`,
+    {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projects, resumeId })
+    }
+  );
+  if (!res.ok) throw new Error("Failed to add projects");
+  return res.json();
+};
+
+// Update projects for a resume
+export const updateProjectsForResume = async (projects, resumeId) => {
+  const res = await fetch(
+    `${import.meta.env.VITE_BACKEND_URL}/api/projects/update`,
+    {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projects, resumeId })
+    }
+  );
+  if (!res.ok) throw new Error("Failed to update projects");
+  return res.json();
+};
+
+// Get projects for a resume
+export const getProjectsByResume = async (resumeId) => {
+  const res = await fetch(
+    `${import.meta.env.VITE_BACKEND_URL}/api/projects/${resumeId}`,
+    {
+      credentials: "include"
+    }
+  );
+  if (!res.ok) throw new Error("Failed to fetch projects");
+  return res.json();
+};
+
 // Get all resumes for the logged-in user
 export const getUserResumes = async () => {
   const res = await fetch(
