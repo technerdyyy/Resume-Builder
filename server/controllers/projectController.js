@@ -1,4 +1,4 @@
-const { addProjects, getProjectsByResume, deleteProjectsByResume } = require('../Models/projectModel');
+const { addProjects, getProjectsByResume, deleteProjectsByResume } = require('../models/projectModel');
 
 // Controller to add projects to a resume
 const addProjectsToResume = async (req, res) => {
