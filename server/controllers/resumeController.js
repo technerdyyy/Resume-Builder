@@ -1,4 +1,4 @@
-const resumeModel = require('../models/ResumeModel');
+const resumeModel = require("../models/ResumeModel");
 
 exports.createResume = async (req, res) => {
   try {
@@ -33,9 +33,29 @@ exports.getResume = async (req, res) => {
 exports.updateResume = async (req, res) => {
   try {
     const userId = req.user.id;
-    const resume = await resumeModel.updateResume(req.params.id, userId, req.body);
+    const resume = await resumeModel.updateResume(
+      req.params.id,
+      userId,
+      req.body
+    );
     res.json(resume);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+exports.deleteResume = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const resume = await resumeModel.deleteResume(req.params.id, userId);
+
+    if (!resume) {
+      return res.status(404).json({ message: "Resume not found" });
+    }
+
+    res.json({ message: "Resume deleted successfully" });
+  } catch (error) {
+    console.error("Delete resume error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };

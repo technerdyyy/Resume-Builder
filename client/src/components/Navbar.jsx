@@ -43,9 +43,9 @@ const Navbar = () => {
             >
               Create
             </Link>
-            <button className="px-6 py-3 rounded-lg font-medium text-white bg-opacity-10 hover:bg-opacity-20 hover:shadow-md transition-all duration-300">
+            {/* <button className="px-6 py-3 rounded-lg font-medium text-white bg-opacity-10 hover:bg-opacity-20 hover:shadow-md transition-all duration-300">
               Contact
-            </button>
+            </button> */}
 
             {/* ✅ Show profile icon if logged in, else Sign Up */}
             {user ? (
@@ -127,7 +127,7 @@ const Navbar = () => {
                   Create Resume
                 </Link>
 
-                <Link
+                {/* <Link
                   to="/"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`block px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
@@ -137,7 +137,7 @@ const Navbar = () => {
                   }`}
                 >
                   Contact
-                </Link>
+                </Link> */}
 
                 {/* ✅ Show profile link if logged in, else Login */}
                 {user ? (

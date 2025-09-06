@@ -83,20 +83,16 @@ export const fetchUserProfile = async () => {
 //   return await apiRequest('/auth/me', { method: 'GET' });
 // };
 
-
 // ...existing code...
 
 // Create a new resume
 export const createResume = async (resumeData) => {
-  const res = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}/api/resumes`,
-    {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(resumeData)
-    }
-  );
+  const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(resumeData),
+  });
   if (!res.ok) throw new Error("Failed to create resume");
   return res.json();
 };
@@ -109,7 +105,7 @@ export const addProjectsToResume = async (projects, resumeId) => {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ projects, resumeId })
+      body: JSON.stringify({ projects, resumeId }),
     }
   );
   if (!res.ok) throw new Error("Failed to add projects");
@@ -124,7 +120,7 @@ export const updateProjectsForResume = async (projects, resumeId) => {
       method: "PUT",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ projects, resumeId })
+      body: JSON.stringify({ projects, resumeId }),
     }
   );
   if (!res.ok) throw new Error("Failed to update projects");
@@ -136,7 +132,7 @@ export const getProjectsByResume = async (resumeId) => {
   const res = await fetch(
     `${import.meta.env.VITE_BACKEND_URL}/api/projects/${resumeId}`,
     {
-      credentials: "include"
+      credentials: "include",
     }
   );
   if (!res.ok) throw new Error("Failed to fetch projects");
@@ -145,12 +141,9 @@ export const getProjectsByResume = async (resumeId) => {
 
 // Get all resumes for the logged-in user
 export const getUserResumes = async () => {
-  const res = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}/api/resumes`,
-    {
-      credentials: "include"
-    }
-  );
+  const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes`, {
+    credentials: "include",
+  });
   if (!res.ok) throw new Error("Failed to fetch resumes");
   return res.json();
 };
@@ -160,7 +153,7 @@ export const getResumeById = async (resumeId) => {
   const res = await fetch(
     `${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeId}`,
     {
-      credentials: "include"
+      credentials: "include",
     }
   );
   if (!res.ok) throw new Error("Failed to fetch resume");
@@ -175,9 +168,22 @@ export const updateResume = async (resumeId, resumeData) => {
       method: "PUT",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(resumeData)
+      body: JSON.stringify(resumeData),
     }
   );
   if (!res.ok) throw new Error("Failed to update resume");
+  return res.json();
+};
+
+// Delete a resume
+export const deleteResume = async (resumeId) => {
+  const res = await fetch(
+    `${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeId}`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    }
+  );
+  if (!res.ok) throw new Error("Failed to delete resume");
   return res.json();
 };

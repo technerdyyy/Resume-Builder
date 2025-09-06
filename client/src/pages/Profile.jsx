@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Edit, Trash2, FileText, User, Mail } from "lucide-react";
+import { Edit, Trash2, FileText, User, Mail, LogOut, Plus } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
@@ -34,7 +34,6 @@ const Profile = () => {
     fetchResumes();
   }, []);
 
-
   const handleEditResume = (resumeId) => {
     navigate(`/resume-add?edit=${resumeId}`);
   };
@@ -45,11 +44,25 @@ const Profile = () => {
       try {
         const { deleteResume } = await import("../utils/api");
         await deleteResume(resumeId);
-        setSavedResumes(savedResumes.filter((resume) => resume.id !== resumeId));
+
+        // Remove from local state immediately for better UX
+        setSavedResumes((prevResumes) =>
+          prevResumes.filter((resume) => resume.id !== resumeId)
+        );
+
         toast.success("Resume deleted successfully!");
       } catch (error) {
         console.error("Error deleting resume:", error);
         toast.error("Failed to delete resume. Please try again.");
+
+        // Optionally refresh the list to ensure consistency
+        try {
+          const { getUserResumes } = await import("../utils/api");
+          const resumes = await getUserResumes();
+          setSavedResumes(resumes);
+        } catch (refreshError) {
+          console.error("Error refreshing resumes:", refreshError);
+        }
       }
     }
   };
@@ -93,7 +106,7 @@ const Profile = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
-                  {user?.username || "John Doe"}
+                  {user?.name || "John Doe"}
                 </h1>
                 <div className="flex items-center text-gray-600 mt-1">
                   <Mail size={16} className="mr-2" />
@@ -105,9 +118,13 @@ const Profile = () => {
             {/* Logout Button */}
             <button
               onClick={handleLogout}
-              className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
+              className="p-3 bg-red-50 text-red-600 rounded-full hover:bg-red-100 transition-colors cursor-pointer group"
+              title="Logout"
             >
-              Logout
+              <LogOut
+                size={20}
+                className="group-hover:scale-110 transition-transform"
+              />
             </button>
           </div>
         </div>
@@ -118,9 +135,11 @@ const Profile = () => {
             <h2 className="text-xl font-bold text-gray-800">Saved Resumes</h2>
             <button
               onClick={() => navigate("/resume-add")}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity cursor-pointer flex items-center"
+              title="Create New Resume"
             >
-              Create New Resume
+              <Plus size={20} className="sm:mr-2" />
+              <span className="hidden sm:inline">Create New Resume</span>
             </button>
           </div>
 
@@ -137,12 +156,6 @@ const Profile = () => {
               <p className="text-gray-500 mb-4">
                 Create your first resume to get started!
               </p>
-              <button
-                onClick={() => navigate("/resume-add")}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity"
-              >
-                Create Resume
-              </button>
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
