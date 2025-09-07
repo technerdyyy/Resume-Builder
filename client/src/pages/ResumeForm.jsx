@@ -16,8 +16,7 @@ import {
 import Navbar from "../components/Navbar";
 import { useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
-
-// import { useSearchParams } from "react-router-dom";
+import { technicalSkills as availableSkills } from "../utils/skills"; // Import from data file
 
 const ResumeForm = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -50,74 +49,35 @@ const ResumeForm = ({ onSubmit }) => {
 
     // Skills (now arrays)
     technicalSkills: [],
-  
-  
+
     softSkills: "",
   });
 
   const [errors, setErrors] = useState({});
   const [useAI, setUseAI] = useState(true);
-  const [skillsDropdownOpen, setSkillsDropdownOpen] = useState(false);
   const [skillsSearch, setSkillsSearch] = useState("");
-  
-
-  // Predefined skills list
-  const availableSkills = [
-    "JavaScript",
-    "Python",
-    "Java",
-    "C++",
-    "C#",
-    "React",
-    "Angular",
-    "Vue.js",
-    "Node.js",
-    "Express.js",
-    "Django",
-    "Flask",
-    "Spring Boot",
-    "MongoDB",
-    "MySQL",
-    "PostgreSQL",
-    "Redis",
-    "AWS",
-    "Azure",
-    "Google Cloud",
-    "Docker",
-    "Kubernetes",
-    "Git",
-    "HTML",
-    "CSS",
-    "Sass",
-    "Tailwind CSS",
-    "Bootstrap",
-    "TypeScript",
-    "GraphQL",
-    "REST API",
-    "Machine Learning",
-    "TensorFlow",
-    "PyTorch",
-    "Data Analysis",
-    "Pandas",
-    "NumPy",
-  ];
+  const [skillSuggestions, setSkillSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
 
   const [searchParams] = useSearchParams();
-  const editId = searchParams.get('edit');
+  const editId = searchParams.get("edit");
 
   // Fetch resume data for editing
   useEffect(() => {
     const fetchResumeData = async (resumeId) => {
       try {
-        const { getResumeById, getProjectsByResume } = await import("../utils/api");
-        
+        const { getResumeById, getProjectsByResume } = await import(
+          "../utils/api"
+        );
+
         // Fetch resume data
         const resume = await getResumeById(resumeId);
-        
+
         // Fetch projects for this resume
         const projectsResponse = await getProjectsByResume(resumeId);
         const projects = projectsResponse.projects || [];
-        
+
         // Pre-fill form data
         setFormData({
           name: resume.name || "",
@@ -132,18 +92,27 @@ const ResumeForm = ({ onSubmit }) => {
           company: resume.company || "",
           workDuration: resume.work_duration || "",
           jobDescription: resume.job_description || "",
-          projects: projects.length > 0 ? projects.map(p => ({
-            projectName: p.project_name || "",
-            projectDescription: p.project_description || "",
-            technologies: p.technologies || "",
-          })) : [{
-            projectName: "",
-            projectDescription: "",
-            technologies: "",
-          }],
-          technicalSkills: resume.technical_skills ? 
-            (Array.isArray(resume.technical_skills) ? resume.technical_skills : 
-             typeof resume.technical_skills === 'string' ? resume.technical_skills.split(',').map(s => s.trim()) : []) : [],
+          projects:
+            projects.length > 0
+              ? projects.map((p) => ({
+                  projectName: p.project_name || "",
+                  projectDescription: p.project_description || "",
+                  technologies: p.technologies || "",
+                }))
+              : [
+                  {
+                    projectName: "",
+                    projectDescription: "",
+                    technologies: "",
+                  },
+                ],
+          technicalSkills: resume.technical_skills
+            ? Array.isArray(resume.technical_skills)
+              ? resume.technical_skills
+              : typeof resume.technical_skills === "string"
+              ? resume.technical_skills.split(",").map((s) => s.trim())
+              : []
+            : [],
           softSkills: resume.soft_skills || "",
         });
       } catch (error) {
@@ -157,16 +126,105 @@ const ResumeForm = ({ onSubmit }) => {
     }
   }, [editId]);
 
-  // Handle click outside for skills dropdown
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest(".skills-dropdown")) {
-        setSkillsDropdownOpen(false);
+  // Handle skills input change and generate suggestions
+  const handleSkillsInputChange = (e) => {
+    const value = e.target.value;
+    setSkillsSearch(value);
+
+    if (value.trim()) {
+      const filtered = availableSkills.filter(
+        (skill) =>
+          skill.toLowerCase().includes(value.toLowerCase()) &&
+          !formData.technicalSkills.includes(skill)
+      );
+      setSkillSuggestions(filtered.slice(0, 8)); // Show max 8 suggestions
+      setShowSuggestions(true);
+      setActiveSuggestionIndex(-1);
+    } else {
+      setSkillSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  // Handle keyboard navigation for suggestions
+  const handleSkillsKeyDown = (e) => {
+    if (!showSuggestions) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (skillsSearch.trim()) {
+          addSkill(skillsSearch.trim());
+        }
       }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+      return;
+    }
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setActiveSuggestionIndex((prev) =>
+          prev < skillSuggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setActiveSuggestionIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (activeSuggestionIndex >= 0) {
+          addSkill(skillSuggestions[activeSuggestionIndex]);
+        } else if (skillsSearch.trim()) {
+          addSkill(skillsSearch.trim());
+        }
+        break;
+      case "Escape":
+        setShowSuggestions(false);
+        setActiveSuggestionIndex(-1);
+        break;
+      case "Tab":
+        if (activeSuggestionIndex >= 0) {
+          e.preventDefault();
+          addSkill(skillSuggestions[activeSuggestionIndex]);
+        }
+        break;
+    }
+  };
+
+  // Add skill function
+  const addSkill = (skill) => {
+    const trimmedSkill = skill.trim();
+    if (trimmedSkill && !formData.technicalSkills.includes(trimmedSkill)) {
+      setFormData((prev) => ({
+        ...prev,
+        technicalSkills: [...prev.technicalSkills, trimmedSkill],
+      }));
+      setSkillsSearch("");
+      setShowSuggestions(false);
+      setSkillSuggestions([]);
+      setActiveSuggestionIndex(-1);
+    }
+  };
+
+  // Handle suggestion click
+  const handleSuggestionClick = (skill) => {
+    addSkill(skill);
+  };
+
+  // Hide suggestions when clicking outside
+  const handleSkillsInputBlur = (e) => {
+    // Small delay to allow suggestion clicks to register
+    setTimeout(() => {
+      setShowSuggestions(false);
+      setActiveSuggestionIndex(-1);
+    }, 200);
+  };
+
+  // Handle focus to show suggestions again
+  const handleSkillsInputFocus = () => {
+    if (skillsSearch.trim() && skillSuggestions.length > 0) {
+      setShowSuggestions(true);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -230,18 +288,6 @@ const ResumeForm = ({ onSubmit }) => {
     }
   };
 
-  // Handle skill selection
-  const addSkill = (skill) => {
-    if (!formData.technicalSkills.includes(skill)) {
-      setFormData((prev) => ({
-        ...prev,
-        technicalSkills: [...prev.technicalSkills, skill],
-      }));
-    }
-    setSkillsDropdownOpen(false);
-    setSkillsSearch(""); // Add this line
-  };
-
   // Remove skill
   const removeSkill = (skillToRemove) => {
     setFormData((prev) => ({
@@ -275,20 +321,38 @@ const ResumeForm = ({ onSubmit }) => {
       }
     });
 
-    // Validate projects
-    formData.projects.forEach((project, index) => {
-      if (!project.projectName.trim()) {
-        newErrors[`projects.${index}.projectName`] = "Project name is required";
-      }
-      if (!project.projectDescription.trim()) {
-        newErrors[`projects.${index}.projectDescription`] =
-          "Project description is required";
-      }
-      if (!project.technologies.trim()) {
-        newErrors[`projects.${index}.technologies`] =
-          "Technologies are required";
-      }
-    });
+    // Validate projects only if any project has data
+    const hasAnyProjectData = formData.projects.some(
+      (project) =>
+        project.projectName.trim() ||
+        project.projectDescription.trim() ||
+        project.technologies.trim()
+    );
+
+    if (hasAnyProjectData) {
+      formData.projects.forEach((project, index) => {
+        // Only validate projects that have at least one field filled
+        const hasProjectData =
+          project.projectName.trim() ||
+          project.projectDescription.trim() ||
+          project.technologies.trim();
+
+        if (hasProjectData) {
+          if (!project.projectName.trim()) {
+            newErrors[`projects.${index}.projectName`] =
+              "Project name is required";
+          }
+          if (!project.projectDescription.trim()) {
+            newErrors[`projects.${index}.projectDescription`] =
+              "Project description is required";
+          }
+          if (!project.technologies.trim()) {
+            newErrors[`projects.${index}.technologies`] =
+              "Technologies are required";
+          }
+        }
+      });
+    }
 
     // Validate technical skills
     if (formData.technicalSkills.length === 0) {
@@ -322,7 +386,9 @@ const ResumeForm = ({ onSubmit }) => {
               {editId ? "Edit Your Resume" : "Build Your Resume"}
             </h1>
             <p className="text-gray-600">
-              {editId ? "Update your details and enhance your profile" : "Fill in your details and let AI enhance your profile"}
+              {editId
+                ? "Update your details and enhance your profile"
+                : "Fill in your details and let AI enhance your profile"}
             </p>
           </div>
 
@@ -623,15 +689,17 @@ const ResumeForm = ({ onSubmit }) => {
             <section>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-800 pb-2 border-b border-gray-200">
-                  Projects
+                  Projects{" "}
+                  <span className="text-sm font-normal text-gray-500">
+                    (Optional)
+                  </span>
                 </h2>
                 <button
                   type="button"
                   onClick={addProject}
-                  className="flex items-center px-4 py-2  text-black rounded-lg  transition-colors cursor-pointer"
+                  className="flex items-center px-4 py-2 text-black rounded-lg transition-colors cursor-pointer"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  {/* Add Project */}
                 </button>
               </div>
 
@@ -648,10 +716,9 @@ const ResumeForm = ({ onSubmit }) => {
                       <button
                         type="button"
                         onClick={() => removeProject(index)}
-                        className="flex items-center px-3 py-1  text-black rounded  transition-colors cursor-pointer"
+                        className="flex items-center px-3 py-1 text-black rounded transition-colors cursor-pointer"
                       >
-                        <Trash2 className="w-4 h-4 mr-1 " />
-                        {/* Remove */}
+                        <Trash2 className="w-4 h-4 mr-1" />
                       </button>
                     )}
                   </div>
@@ -661,8 +728,7 @@ const ResumeForm = ({ onSubmit }) => {
                     <div className="space-y-2">
                       <label className="flex items-center text-sm font-medium text-gray-700">
                         <Code className="w-4 h-4 mr-2" />
-                        Project Name{" "}
-                        <span className="text-red-500 ml-1">*</span>
+                        Project Name
                       </label>
                       <input
                         type="text"
@@ -692,8 +758,7 @@ const ResumeForm = ({ onSubmit }) => {
                     <div className="space-y-2">
                       <label className="flex items-center text-sm font-medium text-gray-700">
                         <Code className="w-4 h-4 mr-2" />
-                        Project Description{" "}
-                        <span className="text-red-500 ml-1">*</span>
+                        Project Description
                       </label>
                       <textarea
                         value={project.projectDescription}
@@ -723,8 +788,7 @@ const ResumeForm = ({ onSubmit }) => {
                     <div className="space-y-2">
                       <label className="flex items-center text-sm font-medium text-gray-700">
                         <Code className="w-4 h-4 mr-2" />
-                        Technologies Used{" "}
-                        <span className="text-red-500 ml-1">*</span>
+                        Technologies Used
                       </label>
                       <input
                         type="text"
@@ -754,13 +818,13 @@ const ResumeForm = ({ onSubmit }) => {
               ))}
             </section>
 
-            {/* Skills */}
+            {/* Skills - Updated Section */}
             <section>
               <h2 className="text-xl font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">
                 Skills
               </h2>
               <div className="space-y-6">
-                {/* Technical Skills */}
+                {/* Technical Skills with Suggestions */}
                 <div className="space-y-2">
                   <label className="flex items-center text-sm font-medium text-gray-700">
                     <Code className="w-4 h-4 mr-2" />
@@ -768,58 +832,80 @@ const ResumeForm = ({ onSubmit }) => {
                     <span className="text-red-500 ml-1">*</span>
                   </label>
 
-                  {/* Skills Dropdown */}
-                  <div className="relative skills-dropdown">
+                  {/* Skills Input with Suggestions */}
+                  <div className="relative">
                     <input
                       type="text"
                       value={skillsSearch}
-                      onChange={(e) => setSkillsSearch(e.target.value)}
-                      onFocus={() => setSkillsDropdownOpen(true)}
-                      placeholder="Search and select skills..."
+                      onChange={handleSkillsInputChange}
+                      onKeyDown={handleSkillsKeyDown}
+                      onFocus={handleSkillsInputFocus}
+                      onBlur={handleSkillsInputBlur}
+                      placeholder="Start typing to see suggestions (press Enter to add)..."
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     />
 
-                    {skillsDropdownOpen && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                        {availableSkills
-                          .filter(
-                            (skill) =>
-                              !formData.technicalSkills.includes(skill) &&
-                              skill
-                                .toLowerCase()
-                                .includes(skillsSearch.toLowerCase())
-                          )
-                          .map((skill) => (
-                            <button
-                              key={skill}
-                              type="button"
-                              onClick={() => addSkill(skill)}
-                              className="w-full px-4 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
-                            >
-                              {skill}
-                            </button>
-                          ))}
+                    {/* Suggestions List */}
+                    {showSuggestions && skillSuggestions.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {skillSuggestions.map((skill, index) => (
+                          <button
+                            key={skill}
+                            type="button"
+                            onClick={() => handleSuggestionClick(skill)}
+                            className={`w-full px-4 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none ${
+                              index === activeSuggestionIndex
+                                ? "bg-blue-100"
+                                : ""
+                            }`}
+                          >
+                            <span className="text-gray-800">{skill}</span>
+                          </button>
+                        ))}
                       </div>
                     )}
+
+                    {/* No suggestions found */}
+                    {showSuggestions &&
+                      skillsSearch.trim() &&
+                      skillSuggestions.length === 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                          <div className="px-4 py-2 text-gray-500 text-sm">
+                            No suggestions found. Press Enter to add "
+                            {skillsSearch}" as a custom skill.
+                          </div>
+                        </div>
+                      )}
                   </div>
 
                   {/* Selected Skills Tags */}
                   <div className="flex flex-wrap gap-2 mt-3">
-                    {formData.technicalSkills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                      >
-                        {skill}
-                        <button
-                          type="button"
-                          onClick={() => removeSkill(skill)}
-                          className="ml-2 hover:text-blue-600"
+                    {formData.technicalSkills.map((skill, index) => {
+                      const isCustomSkill = !availableSkills.includes(skill);
+                      return (
+                        <span
+                          key={`${skill}-${index}`}
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
+                            isCustomSkill
+                              ? "bg-green-100 text-green-800 border border-green-300"
+                              : "bg-blue-100 text-blue-800"
+                          }`}
                         >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
+                          {skill}
+                          <button
+                            type="button"
+                            onClick={() => removeSkill(skill)}
+                            className={`ml-2 ${
+                              isCustomSkill
+                                ? "hover:text-green-600"
+                                : "hover:text-blue-600"
+                            }`}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      );
+                    })}
                   </div>
 
                   {errors.technicalSkills && (
@@ -879,10 +965,13 @@ const ResumeForm = ({ onSubmit }) => {
                 type="submit"
                 className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-12 py-4 rounded-full text-lg font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-500 focus:ring-opacity-50 cursor-pointer"
               >
-                {editId 
-                  ? (useAI ? "Update Resume with AI" : "Update Resume")
-                  : (useAI ? "Generate Resume with AI" : "Generate Resume")
-                }
+                {editId
+                  ? useAI
+                    ? "Update Resume with AI"
+                    : "Update Resume"
+                  : useAI
+                  ? "Generate Resume with AI"
+                  : "Generate Resume"}
               </button>
             </div>
           </form>
